@@ -1,0 +1,75 @@
+# Parameters:
+# These are the input parameters for the template. They
+# give us the flexibility to change some settings without
+# having to modify the template code.
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: ---
+Metadata: 
+
+Parameters:
+  EC2InstanceType:
+    Type: String
+  EC2AMI:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'  
+
+Resources:
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+    # !Sub is a CloudFormation function that performs string interpolation.
+    # Here, we interpolate the stack name into the security group
+    # description.
+
+    # AWS::StackName is a CloudFormation pseudo parameter. There are
+    # many other useful ones.
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/pseudo-parameter-reference.html
+      GroupDescription: !Sub 'Internal Security group for ${AWS::StackName}'
+
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      
+      Tags:
+        Key: Name
+        Value: !Ref AWS::StackName
+
+  InstanceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service:
+              - "ec2.amazonaws.com"
+        Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+      Tags:
+        - Key: Name
+          Value: Ref AWS::StackNameue
+        
+          
+
+
+Outputs:
+
+
+# Resources:
+# This is the bulk of the template. Here is where we define
+# and configure the resources that CloudFormation will
+# manage for us.
+
+# Outputs:
+# These are like return values for the template. We use
+# them to make it easy to find some of the resources that
+# CloudFormation will create for us.
